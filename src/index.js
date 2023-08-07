@@ -2,7 +2,7 @@ import Notiflix from 'notiflix';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { searchPhotoApi } from './js/img-api';
+import { searchPhotoApi } from './js/pixabay';
 
 const form = document.querySelector('.search-form');
 const galleryEl = document.querySelector('.gallery__wrapp');
