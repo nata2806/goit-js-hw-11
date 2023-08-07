@@ -1,0 +1,33 @@
+body {
+  font-size: 14px;
+}
+
+.thumb {
+  width: 180px;
+  margin: 14px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.thumb > img {
+  width: 100%;
+}
+
+
+.container {
+  max-width: 68%;
+  margin: auto;
+}
+
+.d-flex {
+  display: flex;
+}
+
+
+.align-items-start {
+  align-items: flex-start;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
