@@ -6,7 +6,7 @@ const getPhotosService = async (value, page) => {
 
     const { data } = await axios(BAZE_URL, {
         params: {
-            key: '38700636-ea33df46ee2c91044811eb016',
+            key: '38614458-d50fcc5469c58311283d9e834',
             q: `${value}`,
             image_type: "photo",
             orientation: "horizontal",
