@@ -1,24 +1,28 @@
-import { getPhotosService } from "./js/pixabay.js";
+import { getPhotosService } from "./pixabay";
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const form = document.querySelector('#search-form')
-const gallery = document.querySelector('.gallery')
-const btnLoad = document.querySelector('.load-more')
+
+const form = document.querySelector('#search-form');
+const gallery = document.querySelector('.gallery');
+const btnLoad = document.querySelector('.load-more');
+const guard = document.querySelector('.js-guard');
 const enterInput = form.firstElementChild;
 const btnSearch = form.lastElementChild;
+const btnToTop = document.getElementById('scroll-to-top-btn');
 
 const perPage = 40;
 let currentPage = 1;
-let querry = ""
-let quantityPage = null
+let querry = "";
+let quantityPage = null;
 
-
-enterInput.addEventListener('focus', handlerFocusInput)
-
-btnLoad.classList.add('is-hidden')
+btnLoad.classList.add('is-hidden');
 btnSearch.disabled = true;
+
+enterInput.addEventListener('input', handlerFocusInput)
+window.addEventListener('scroll', handlerTopScroll)
+btnToTop.addEventListener('click', handlerBtnToTop)
 
 function handlerFocusInput() {
     btnSearch.disabled = false;
@@ -26,15 +30,14 @@ function handlerFocusInput() {
 }
 
 async function handlerSearch(evt) {
-    handlerFocusInput()
+    handlerFocusInput();
     evt.preventDefault();
-    gallery.innerHTML = ""
+    gallery.innerHTML = "";
     currentPage = 1;
     const { searchQuery } = evt.currentTarget.elements;
     querry = searchQuery.value.trim();
 
     if (evt.type === 'submit') {
-        btnLoad.classList.add('is-hidden')
         try {
             const getPhotos = await getPhotosService(querry);
             const { hits, totalHits } = getPhotos;
@@ -53,36 +56,17 @@ async function handlerSearch(evt) {
             quantityPage = Math.ceil(totalHits / perPage);
 
             if (currentPage < quantityPage) {
-                btnLoad.classList.remove('is-hidden');
-                btnLoad.addEventListener('click', handlerLoad)
+                observer.observe(guard);
             }
+
         }
         catch (err) {
             Notify.failure(err.message);
+            console.log(err);
         }
     }
 }
 
-async function handlerLoad() {
-    currentPage += 1;
-    console.log(currentPage);
-    try {
-        const { hits } = await getPhotosService(querry, currentPage);
-
-        gallery.insertAdjacentHTML('beforeend', createMarcupGallery(hits));
-
-        createLightbox();
-        scrollGallery();
-
-        if (currentPage === quantityPage) {
-            Notify.info("We're sorry, but you've reached the end of search results.");
-            btnLoad.classList.add('is-hidden');
-        }
-    }
-    catch (err) {
-        Notify.failure(err.message);
-    }
-}
 
 
 
@@ -90,7 +74,8 @@ function createMarcupGallery(hits) {
     return hits.map((
         { webformatURL, largeImageURL, tags, likes, views, comments, downloads }
     ) => {
-        return `<a href="${largeImageURL}" class="link-lightbox"><div class="photo-card">
+        return `<a href="${largeImageURL}" class="link-lightbox">
+        <div class="photo-card">
         <img src="${webformatURL}" alt="${tags}" loading="lazy" />
         <div class="info">
           <p class="info-item">
@@ -109,8 +94,9 @@ function createMarcupGallery(hits) {
       </div>
       </a>`
     }).join(" ");
-
 }
+
+
 
 function createLightbox() {
     const lightbox = new SimpleLightbox('.gallery a', {
@@ -121,13 +107,56 @@ function createLightbox() {
     lightbox.refresh();
 }
 
-function scrollGallery() {
-    const { height: cardHeight } = document
-        .querySelector(".gallery")
-        .firstElementChild.getBoundingClientRect();
+const observer = new IntersectionObserver(handlerInfinitiLoad, {
+    rootMargin: '300px',
+    threshold: 1.0
+});
 
-    window.scrollBy({
-        top: cardHeight * 2,
-        behavior: "smooth",
+
+function handlerInfinitiLoad(entries, observer) {
+
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            currentPage += 1;
+            createNewPage();
+        }
+    });
+
+    if (currentPage === quantityPage) {
+        observer.unobserve(guard);
+
+        Notify.info("We're sorry, but you've reached the end of search results.");
+    }
+
+}
+
+async function createNewPage() {
+    try {
+        const { hits } = await getPhotosService(querry, currentPage);
+
+        gallery.insertAdjacentHTML('beforeend', createMarcupGallery(hits));
+
+        createLightbox();
+       
+    }
+    catch (err) {
+        Notify.failure(err.message);
+        console.log(err);
+    }
+}
+
+
+function handlerTopScroll() {
+    if (document.body.scrollTop > 700 || document.documentElement.scrollTop > 700) {
+        btnToTop.classList.add('visible');
+    } else {
+        btnToTop.classList.remove('visible');
+    }
+}
+
+function handlerBtnToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
     });
 }
