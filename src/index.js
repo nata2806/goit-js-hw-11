@@ -33,6 +33,7 @@ async function handlerSearch(evt) {
     const { searchQuery } = evt.currentTarget.elements;
     querry = searchQuery.value.trim();
 
+    if (!querry) {return};
     if (evt.type === 'submit') {
         btnLoad.classList.add('is-hidden')
         try {
